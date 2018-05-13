@@ -1,5 +1,7 @@
 class CategorySerializer < ActiveModel::Serializer
-  has_many :products
+  attributes :id, :name, :products_count
 
-  attributes :id, :name
+  def products_count
+    object.products.count
+  end
 end
