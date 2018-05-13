@@ -1,5 +1,5 @@
 class ProductsController < ApplicationController
-  before_action :load_category
+  before_action :load_category, only: [:index, :create]
 
   # GET /categories/:category_id/products
   def index
@@ -19,9 +19,9 @@ class ProductsController < ApplicationController
     end
   end
 
-  # DELETE /categories/:category_id/products/:product_id
+  # DELETE /products/:product_id
   def destroy
-    @product = @category.products.find(params[:id])
+    @product = Product.find(params[:id])
     @product.destroy
   end
 
@@ -29,7 +29,7 @@ class ProductsController < ApplicationController
 
   # Only allow a trusted parameter "white list" through.
   def product_params
-    params.require(:product).permit(:name, :price, :parent_id)
+    params.require(:product).permit(:name, :price, :category_id)
   end
 
   def load_category

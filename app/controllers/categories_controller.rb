@@ -1,6 +1,4 @@
 class CategoriesController < ApplicationController
-  before_action :set_category, only: [:show, :update, :destroy]
-
   # GET /categories
   def index
     @categories = Category.all
@@ -13,18 +11,13 @@ class CategoriesController < ApplicationController
     @category = Category.new(category_params)
 
     if @category.save
-      render json: @category, status: :created, location: @category
+      render json: @category, status: :created
     else
       render json: { errors: @category.errors }, status: :unprocessable_entity
     end
   end
 
   private
-
-  # Use callbacks to share common setup or constraints between actions.
-  def set_category
-    @category = Category.find(params[:id])
-  end
 
   # Only allow a trusted parameter "white list" through.
   def category_params
