@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :product do
-    name "MyString"
+    name "Bread"
     price 1.5
     category_id 1
   end

@@ -5,56 +5,96 @@ RSpec.describe "Categories", type: :request do
   let!(:category) { create :category }
 
   describe "GET /categories" do
-    before { get categories_path }
+    let!(:second_category) { create :category, name: 'Drinks' }
+    let(:expected_json) do
+      [
+        {
+          'id' => 1,
+          'name' => 'Food',
+          'products_count' => 0
+        },
+        {
+          'id' => 2,
+          'name' => 'Drinks',
+          'products_count' => 0
+        }
+      ]
+    end
 
-    it { expect(response).to have_http_status(200) }
-    it { expect(parsed_response).to eq([{"id"=>1, "name"=>"Food"}]) }
+    it "successfully returns all categories" do
+      get categories_path
+      expect(response).to have_http_status(200)
+      expect(parsed_response).to eq(expected_json)
+    end
+
+    it "shows right products_count for category" do
+      category.products << create(:product)
+      get categories_path
+      expect(parsed_response[0]['products_count']).to eq(1)
+    end
   end
 
   describe "POST /categories" do
+    let(:valid_params) do
+      {
+        category: {
+          name: 'Drinks'
+        }
+      }
+    end
+
     context "valid params for new category" do
-      let(:valid_params) do
+      let(:expected_json) do
         {
-          category: {
-            name: 'Drinks'
-          }
+          'id' => 2,
+          'name' => 'Drinks',
+          'products_count' => 0
         }
       end
 
-      before { post categories_path, params: valid_params}
-
-      it { expect(response).to have_http_status(201) }
-      it { expect(parsed_response).to eq({"id"=>2, "name"=>"Drinks"})}
+      it 'creates new category' do
+        expect { post categories_path, params: valid_params }.to change(Category, :count).by(+1)
+        expect(response).to have_http_status(201)
+        expect(parsed_response).to eq(expected_json)
+      end
     end
 
     context "blank category name" do
-      let(:blank_name_params) do
+      let(:expected_json) do
         {
-          category: {
-            name: ''
+          'errors' => {
+            'name' => [
+              "can't be blank"
+            ]
           }
         }
       end
 
-      before { post categories_path, params: blank_name_params }
-
-      it { expect(response).to have_http_status(422) }
-      it { expect(parsed_response).to eq({"errors"=>{"name"=>["can't be blank"]}}) }
+      it 'can not create new category with blank name' do
+        expect { post categories_path, params: valid_params.merge(category: { name: nil }) }.
+          to change(Category, :count).by(0)
+        expect(response).to have_http_status(422)
+        expect(parsed_response).to eq(expected_json)
+      end
     end
 
-    context "blank category name" do
-      let(:taken_name_params) do
+    context "not unique category name" do
+      let(:expected_json) do
         {
-          category: {
-            name: 'Food'
+          'errors' => {
+            'name' => [
+              "has already been taken"
+            ]
           }
         }
       end
 
-      before { post categories_path, params: taken_name_params }
-
-      it { expect(response).to have_http_status(422) }
-      it { expect(parsed_response).to eq({"errors"=>{"name"=>["has already been taken"]}}) }
+      it 'can not create new category if name is not unique' do
+        expect { post categories_path, params: valid_params.merge(category: { name: 'Food' }) }.
+          to change(Category, :count).by(0)
+        expect(response).to have_http_status(422)
+        expect(parsed_response).to eq(expected_json)
+      end
     end
   end
 end
